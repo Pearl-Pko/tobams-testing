@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import NavBar from "./_components/NavBar";
+import Session from "@/components/Session";
 
 export default function RootLayout({
   children,
@@ -11,10 +11,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="flex ">
-          <NavBar></NavBar>
-          <div className="p-6 flex-1">{children}</div>
-        </div>
+        <Session>{children}</Session>
       </body>
     </html>
   );
