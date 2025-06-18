@@ -1,8 +1,7 @@
-"use server";
-
-import { signIn } from "@/auth";
-import { signUp } from "@/services/auth";
-import { redirect } from "next/navigation";
+"use server"
+import { createSession } from "@/lib/session";
+import { signUp, signIn } from "@/services/auth";
+import { redirect } from 'next/navigation'
 
 export const signin = async (
   prevState: { error: string | null },
@@ -12,21 +11,18 @@ export const signin = async (
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      
-    });
+    const result = await signIn(email, password);
+    if (result) return { error: null };
+
     // console.log("resss", res);
-    return { error: null };
+    return { error: "Email or password is not correct" };
   } catch (error) {
     console.error(error);
     return { error: "Something happened" };
   }
 };
 
-export const signup = async (
+export  const signup = async (
   prevState: { error: string | null },
   formData: FormData
 ) => {
@@ -34,13 +30,9 @@ export const signup = async (
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const res = await signUp(email, password);
-    signIn("credentials", {
-      ...formData,
-      redirect: false,
-    });
-    console.log("resss", res);
-    return { error: null };
+    const user = await signUp(email, password);
+    await createSession(user.id);
+    redirect("/dashboard");
   } catch (error) {
     console.error(error);
     return { error: "Something happened" };

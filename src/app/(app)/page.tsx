@@ -11,7 +11,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 
 import { useState } from "react";
-import BoardView from "./(app)/_components/BoardView";
+import BoardView from "./_components/BoardView";
 
 export default function Home() {
   const [view, setView] = useState<"board" | "add">("board");

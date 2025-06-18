@@ -1,16 +1,24 @@
 "use client";
 import { signup as signUpAction } from "@/actions/auth";
-import { init } from "next/dist/compiled/webpack/webpack";
-import React, { useActionState, useState } from "react";
-import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import React, { useActionState, useEffect, useState } from "react";
 
 const initialState = { error: null };
 
 export default function page() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+
   const [password, setPassword] = useState("");
 
-  const [state, formAction] = useActionState(signUpAction, initialState);
+  const [state, formAction, pending] = useActionState(
+    signUpAction,
+    initialState
+  );
+
+//   useEffect(() => {
+//     if (!pending && !state.error) router.push("/dashboard");
+//   }, [pending, state]);
 
   return (
     <form
