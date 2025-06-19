@@ -169,6 +169,8 @@ export default function NavBar() {
             ]}
           />
 
+          
+
           <NavItem title="Reminders" subLinks={[]} />
           <NavItem title="Messengers" subLinks={[]} />
         </div>
