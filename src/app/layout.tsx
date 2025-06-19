@@ -10,10 +10,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AppProvider>
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    </AppProvider>
+    <html lang="en">
+      <body>
+        <AppProvider>{children}</AppProvider>
+      </body>
+    </html>
   );
 }

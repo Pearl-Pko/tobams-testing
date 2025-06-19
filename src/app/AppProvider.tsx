@@ -1,9 +1,8 @@
 "use client";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SessionProvider } from "next-auth/react";
 export const queryClient = new QueryClient();
-
+import { SessionProvider } from "@/context/SessionContext";
 export default function AppProvider({
   children,
 }: {
@@ -11,9 +10,7 @@ export default function AppProvider({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        
-        {children}</SessionProvider>
+      <SessionProvider>{children}</SessionProvider>
     </QueryClientProvider>
   );
 }

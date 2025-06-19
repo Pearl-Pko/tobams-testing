@@ -1,28 +1,30 @@
 "use client";
 import { AddIcon, CaretIcon, DarkIcon, LightIcon } from "@/assets";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/utils";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { getProjects } from "@/services/project";
+import { SessionContext } from "@/context/SessionContext";
+type SubLink = { id: string; label: string; link: string };
 
 const NavItem = ({
   title,
   subLinks,
+  onSubLinkPress,
+  selectedSubLinkId,
 }: {
   title: string;
-  subLinks: { title: string; link: string }[];
+  subLinks: SubLink[];
+  onSubLinkPress?: (sublink: SubLink) => void;
+  selectedSubLinkId: string;
 }) => {
   const [selected, setSelected] = useState(false);
   const [subItemSelected, setSubItemSelected] = useState(-1);
 
   console.log("selected", selected);
   return (
-    <div
-      onClick={() => {
-        setSelected((prev) => !prev);
-        console.log("daddd");
-      }}
-      className="flex flex-col"
-    >
+    <div className="flex flex-col">
       <motion.div
         initial={"inactive"}
         animate={selected ? "active" : "inactive"}
@@ -31,6 +33,10 @@ const NavItem = ({
           inactive: {
             color: "var(--color-secondary)",
           },
+        }}
+        onClick={() => {
+          setSelected((prev) => !prev);
+          console.log("daddd");
         }}
         className="flex items-center justify-between font-semibold py-1"
       >
@@ -66,11 +72,31 @@ const NavItem = ({
             <div className="border-secondary/10 border-l-[3px] flex flex-col py-2 gap-2">
               {subLinks.map((sublink, index) => {
                 return (
-                  <div key={index} className="flex items-center gap-5">
-                    <div className="h-[1.5px] w-4 bg-secondary/10"></div>
-                    <p className="text-secondary font-semibold">
-                      {sublink.title}
-                    </p>
+                  <div key={index}>
+                    <div className="inline-flex items-center gap-5">
+                      <div className="h-[1.5px] w-4 bg-secondary/10"></div>
+                      <motion.div
+                        initial={"inactive"}
+                        exit={"inactive"}
+                        animate={
+                          sublink.id === selectedSubLinkId
+                            ? "active"
+                            : "inactive"
+                        }
+                        variants={{
+                          inactive: {
+                            background: "transparent",
+                          },
+                          active: {
+                            background: "var(--color-secondary)",
+                          },
+                        }}
+                        onClick={() => onSubLinkPress?.(sublink)}
+                        className="text-secondary font-semibold px-3 rounded-md"
+                      >
+                        {sublink.label}
+                      </motion.div>
+                    </div>
                   </div>
                 );
               })}
@@ -84,6 +110,27 @@ const NavItem = ({
 
 export default function NavBar() {
   const [lightMode, setLightMode] = useState(true);
+
+  const sessionContext = useContext(
+    SessionContext
+  ) as SessionContextType | null;
+
+  const productsQuery = useInfiniteQuery({
+    queryFn: getProjects,
+    queryKey: ["projects"],
+
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.currentPage === lastPage.pagination.totalPages
+        ? undefined
+        : lastPage.pagination.currentPage + 1,
+  });
+
+  const products = productsQuery.data?.pages.flatMap((page) => page.data) || [];
+
+  useEffect(() => {
+    console.log("how does it change", sessionContext?.currentProjectId);
+  }, [sessionContext?.currentProjectId]);
 
   return (
     <div className="w-[300px] h-screen p-3 flex flex-col justify-between">
@@ -99,20 +146,24 @@ export default function NavBar() {
 
           <NavItem
             title={"Projects"}
-            subLinks={[
-              { title: "All projects (3)", link: "" },
-              { title: "Design system", link: "" },
-              { title: "User flow", link: "" },
-              { title: "Ux research", link: "" },
-            ]}
+            subLinks={products.map((product) => ({
+              label: product.name,
+              id: product.id,
+              link: "",
+            }))}
+            selectedSubLinkId={sessionContext?.currentProjectId || ""}
+            onSubLinkPress={(sublink) => {
+              console.log("new project id", sublink.id);
+              sessionContext?.setCurrentProjectId(sublink.id);
+            }}
           />
           <NavItem
             title={"Tasks"}
             subLinks={[
-              { title: "All tasks (11))", link: "" },
-              { title: "To do (4)", link: "" },
-              { title: "In progress (4)", link: "" },
-              { title: "Done (3)", link: "" },
+              { label: "All tasks (11))", link: "" },
+              { label: "To do (4)", link: "" },
+              { label: "In progress (4)", link: "" },
+              { label: "Done (3)", link: "" },
             ]}
           />
 
@@ -131,8 +182,7 @@ export default function NavBar() {
             },
             inactive: {
               color: "var(--color-secondary)",
-
-            }
+            },
           }}
           className={cn(
             "relative flex-1  py-2 flex items-center justify-center text-black rounded-full gap-2"

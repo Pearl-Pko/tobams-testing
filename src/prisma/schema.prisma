@@ -80,7 +80,7 @@ model Task {
   description      String?
   status           TaskStatus   @default(TO_DO)
   dueDate          DateTime?
-  priority         TaskPriority @default(MEDIUM)
+  priority         TaskPriority?
   progressTotal    Int          @default(0)
   progressDone     Int          @default(0)
   project          Project      @relation(fields: [projectId], references: [id])
