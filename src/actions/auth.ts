@@ -1,7 +1,10 @@
-"use server"
+"use server";
 import { createSession } from "@/lib/session";
 import { signUp, signIn } from "@/services/auth";
-import { redirect } from 'next/navigation'
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+
 
 export const signin = async (
   prevState: { error: string | null },
@@ -22,7 +25,7 @@ export const signin = async (
   }
 };
 
-export  const signup = async (
+export const signup = async (
   prevState: { error: string | null },
   formData: FormData
 ) => {
@@ -32,9 +35,20 @@ export  const signup = async (
 
     const user = await signUp(email, password);
     await createSession(user.id);
-    redirect("/dashboard");
   } catch (error) {
     console.error(error);
     return { error: "Something happened" };
   }
+  redirect("/");
 };
+
+
+
+export async function getSession() {
+  const session = await cookies();
+
+  const accessToken = session.get("session");
+  if (!accessToken) return null;
+
+  return jwtDecode<{userId: string}>(accessToken?.value);
+}

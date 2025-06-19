@@ -10,7 +10,9 @@ export default function layout({
   return (
     <div className="flex ">
       <NavBar></NavBar>
-      <div className="p-6 flex-1">{children}</div>
+      <div className="flex-1 h-screen">
+        <div className="p-6 h-full">{children}</div>
+      </div>
     </div>
   );
 }
