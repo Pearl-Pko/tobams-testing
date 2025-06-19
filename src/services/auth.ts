@@ -5,6 +5,7 @@ import * as bcrypt from "bcrypt";
 import { jwtDecode } from "jwt-decode";
 import { cookies } from "next/headers";
 import { createSession } from "@/lib/session";
+import { User } from "@prisma/client";
 
 export const signIn = async ({
   email,
@@ -13,37 +14,42 @@ export const signIn = async ({
   email: string;
   password: string;
 }) => {
-  const user = await prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-  });
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
 
-  if (!user) throw Error("User not found");
+    if (!user) return { error: "User not found" };
 
-  if (!user.password) throw Error("User does not have a password");
+    if (!user.password) return { error: "User does not have a password" };
 
-  const isValid = await bcrypt.compare(
-    password,
-    user.password // Assumes you stored hashed password
-  );
+    const isValid = await bcrypt.compare(
+      password,
+      user.password // Assumes you stored hashed password
+    );
 
-  if (!isValid) {
-    throw new Error("Invalid email or password");
+    if (!isValid) {
+      return { error: "Invalid credentials" };
+    }
+
+    console.log("is valid", isValid);
+
+    await createSession(user.id);
+
+    return {
+      id: user?.id,
+      email: user?.email,
+      name: user.name,
+      // emailVerified: user.emailVerified,
+      image: user.image,
+      // Explicitly exclude password
+    };
+  } catch (error) {
+    console.error("Error during sign-in:", error);
+    return { error: "An unexpected error occurred" };
   }
-
-  console.log("is valid", isValid);
-
-  await createSession(user.id);
-
-  return {
-    id: user?.id,
-    email: user?.email,
-    name: user.name,
-    // emailVerified: user.emailVerified,
-    image: user.image,
-    // Explicitly exclude password
-  };
 };
 
 export const signUp = async ({
@@ -54,28 +60,33 @@ export const signUp = async ({
   email: string;
   name: string;
   password: string;
-}) => {
-  const userExists = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
+}) : Promise<User | {error: string}> =>  {
+  try {
+    const userExists = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
-  if (userExists) {
-    throw new Error("User already exists");
+    if (userExists) {
+      return { error: "User already exists" };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: name,
+      },
+    });
+    await createSession(user.id);
+    return user;
+  } catch (error) {
+    console.error("Error during sign-in:", error);
+    return { error: "An unexpected error occurred" };
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name: name,
-    },
-  });
-  await createSession(user.id);
-  return user;
 };
 
 export async function getSession() {

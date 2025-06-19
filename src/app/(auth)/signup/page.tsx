@@ -16,7 +16,18 @@ export default function page() {
 
   const [password, setPassword] = useState("");
   const signUpMut = useMutation({
-    mutationFn: signUp,
+    mutationFn: async (credentials: {
+      email: string;
+      password: string;
+      name: string;
+    }) => {
+      const result = await signUp(credentials);
+  
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result;
+    },
     onSuccess: () => {
       router.push("/");
     },

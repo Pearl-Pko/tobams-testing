@@ -6,7 +6,7 @@ import { getSession } from "./auth"
 export const getUser = async () => {
     const session = await getSession();
     if (!session) {
-        throw new Error("User not authenticated");
+        return {error: "User not authenticated"};
     }
     const userId = session.userId;
 

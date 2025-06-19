@@ -17,16 +17,21 @@ export default function page() {
   const [password, setPassword] = useState("");
 
   const signInMut = useMutation({
-    mutationFn: signIn,
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const result = await signIn(credentials);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result;
+    },
     onSuccess: () => {
       router.push("/");
     },
     onError: (error) => {
-      console.error("error", error);
+      
+      // Optionally, you can set an error state here to display it in the UI
     },
   });
-
-
 
   return (
     <form

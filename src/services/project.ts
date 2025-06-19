@@ -12,7 +12,7 @@ export const createProject = async (projectDto: CreateProjectSchema) => {
   try {
     const session = await getSession();
     if (!session) {
-      throw new Error("User not authenticated");
+      return { error: "User not authenticated" };
     }
 
     const userId = session.userId;
@@ -27,7 +27,7 @@ export const createProject = async (projectDto: CreateProjectSchema) => {
     return project;
   } catch (error) {
     console.error(error);
-    throw error;
+    return {error: "Failed to create project"};
   }
 };
 
@@ -59,7 +59,7 @@ export const createTask = async (projectDto: CreateTaskSchema) => {
   try {
     const session = await getSession();
     if (!session) {
-      throw new Error("User not authenticated");
+      return { error: "User not authenticated" };
     }
 
     const project = await prisma.task.create({
@@ -77,6 +77,8 @@ export const createTask = async (projectDto: CreateTaskSchema) => {
     return project;
   } catch (error) {
     console.error(error);
+    return {error: "Failed to create project"};
+
   }
 };
 
