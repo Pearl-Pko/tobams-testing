@@ -29,12 +29,21 @@ import {
 } from "@/components/ui/dialog";
 import { CreateProjectSchema } from "@/schema/project";
 import CreateTask from "./CreateTask";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useRouter } from "next/navigation";
+import { clearSession } from "@/services/auth";
+import { getUser } from "@/services/user";
 
 export default function Home() {
   const [view, setView] = useState<"board" | "add">("board");
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<CreateProjectSchema>({
     resolver: zodResolver(CreateProjectSchema),
@@ -53,19 +62,6 @@ export default function Home() {
 
   const products = productsQuery.data?.pages.flatMap((page) => page.data) || [];
 
-  const tasksQuery = useInfiniteQuery({
-    queryFn: getTasks,
-    queryKey: ["tasks"],
-
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.currentPage === lastPage.pagination.totalPages
-        ? undefined
-        : lastPage.pagination.currentPage + 1,
-  });
-
-  const tasks = tasksQuery.data?.pages.flatMap((page) => page.data) || [];
-
   const addProjectMut = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
@@ -77,6 +73,13 @@ export default function Home() {
     },
   });
 
+  const userQuery = useQuery({
+    queryFn: getUser,
+    queryKey: ["user"],
+  });
+
+  const user = userQuery.data;
+
   const handleSubmit = async (formData: CreateProjectSchema) => {
     console.log("trieddd");
     addProjectMut.mutate(formData);
@@ -86,7 +89,7 @@ export default function Home() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center">
-        <p className="font-semibold text-lg">Welcome Back, Vincent</p>
+        <p className="font-semibold text-lg">Welcome Back, {user?.name}</p>
         <div className="flex items-center gap-4">
           <SearchIcon />
           <Notificationsicon />
@@ -94,13 +97,29 @@ export default function Home() {
             <CalendarIcon />
             <p className="text-secondary">19 May 2022</p>
           </div>
-          <Image
-            alt=""
-            className="rounded-full size-10 object-cover"
-            width={888}
-            height={1280}
-            src="/blank-profile.webp"
-          />
+          <Popover>
+            <PopoverTrigger>
+              <div>
+                <Image
+                  alt=""
+                  className="rounded-full size-10 object-cover"
+                  width={888}
+                  height={1280}
+                  src="/blank-profile.webp"
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-36">
+              <div
+                onClick={async () => {
+                  await clearSession();
+                  router.replace("/");
+                }}
+              >
+                <p>Log out</p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       {/* Empty products*/}
@@ -197,7 +216,10 @@ export default function Home() {
               <div className="bg-secondary/10 rounded-full size-6 flex items-center justify-center ">
                 <EllipsisIcon />
               </div>
-              <motion.button onClick={() => setCreateTaskDialogOpen(true)} className="bg-black py-2 px-6 rounded-full">
+              <motion.button
+                onClick={() => setCreateTaskDialogOpen(true)}
+                className="bg-black py-2 px-6 rounded-full"
+              >
                 <p className="text-white">New template</p>
               </motion.button>
             </div>

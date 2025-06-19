@@ -1,6 +1,10 @@
 "use client";
-import { signin as signInAction } from "@/actions/auth";
+import Button from "@/components/ui/CustomButton";
+import { signIn } from "@/services/auth";
+import { getUser } from "@/services/user";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { init } from "next/dist/compiled/webpack/webpack";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useActionState, useEffect, useState } from "react";
 import { useFormState } from "react-dom";
@@ -12,18 +16,24 @@ export default function page() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [state, formAction, pending] = useActionState(
-    signInAction,
-    initialState
-  );
+  const signInMut = useMutation({
+    mutationFn: signIn,
+    onSuccess: () => {
+      router.push("/");
+    },
+    onError: (error) => {
+      console.error("error", error);
+    },
+  });
 
-  useEffect(() => {
-    if (!pending && !state.error) router.push("/dashboard");
-  }, [pending, state]);
+
 
   return (
     <form
-      action={formAction}
+      onSubmit={(e) => {
+        e.preventDefault();
+        signInMut.mutate({ email, password });
+      }}
       className="flex items-center justify-center min-h-screen"
     >
       <div className="max-w-[600px] w-full">
@@ -50,13 +60,31 @@ export default function page() {
             />
           </div>
         </div>
-        {state.error && <div>Something wrong happened</div>}
-        <button
+        {signInMut.error && (
+          <div className="bg-red-200 border border-red-300 p-3 my-2">
+            {signInMut.error.message}
+          </div>
+        )}
+        {/* <button
           type="submit"
           className="w-full flex items-center justify-center p-3 rounded-lg bg-black mt-7"
         >
           <p className="text-white">Sign In</p>
-        </button>
+        </button> */}
+        <Button
+          className=" mt-7 w-full"
+          loading={signInMut.isPending}
+          type="submit"
+          text="Sign In"
+        />
+        <div className="my-2">
+          <p>
+            Don't have an account?{" "}
+            <Link href="signup">
+              <span className="italic underline">Sign up</span>
+            </Link>
+          </p>
+        </div>
       </div>
     </form>
   );

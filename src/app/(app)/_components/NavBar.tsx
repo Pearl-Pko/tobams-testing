@@ -56,7 +56,7 @@ const NavItem = ({
       <AnimatePresence>
         {subLinks.length > 0 && selected && (
           <motion.div
-            initial={"inactive"}
+            initial={"active"}
             animate={"active"}
             exit={"inactive"}
             variants={{
@@ -115,7 +115,7 @@ export default function NavBar() {
     SessionContext
   ) as SessionContextType | null;
 
-  const productsQuery = useInfiniteQuery({
+  const projectsQuery = useInfiniteQuery({
     queryFn: getProjects,
     queryKey: ["projects"],
 
@@ -126,11 +126,13 @@ export default function NavBar() {
         : lastPage.pagination.currentPage + 1,
   });
 
-  const products = productsQuery.data?.pages.flatMap((page) => page.data) || [];
+  const projects = projectsQuery.data?.pages.flatMap((page) => page.data) || [];
 
   useEffect(() => {
-    console.log("how does it change", sessionContext?.currentProjectId);
-  }, [sessionContext?.currentProjectId]);
+    if (!sessionContext?.currentProjectId && projects.length > 0) {
+      sessionContext?.setCurrentProjectId(projects[0].id);
+    }
+  }, [sessionContext?.currentProjectId, projects]);
 
   return (
     <div className="w-[300px] h-screen p-3 flex flex-col justify-between">
@@ -146,7 +148,7 @@ export default function NavBar() {
 
           <NavItem
             title={"Projects"}
-            subLinks={products.map((product) => ({
+            subLinks={projects.map((product) => ({
               label: product.name,
               id: product.id,
               link: "",

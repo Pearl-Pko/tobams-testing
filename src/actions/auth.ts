@@ -44,11 +44,3 @@ export const signup = async (
 
 
 
-export async function getSession() {
-  const session = await cookies();
-
-  const accessToken = session.get("session");
-  if (!accessToken) return null;
-
-  return jwtDecode<{userId: string}>(accessToken?.value);
-}

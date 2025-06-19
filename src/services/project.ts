@@ -1,7 +1,7 @@
 "use server";
 
-import { getSession } from "@/actions/auth";
 import { prisma } from "@/prisma";
+import { getSession } from "./auth";
 import { PaginatedQuery } from "@/schema";
 import { CreateProjectSchema, CreateTaskSchema } from "@/schema/project";
 import { Project, Task } from "@prisma/client";
@@ -27,6 +27,7 @@ export const createProject = async (projectDto: CreateProjectSchema) => {
     return project;
   } catch (error) {
     console.error(error);
+    throw error;
   }
 };
 
